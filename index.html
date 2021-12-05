@@ -33,6 +33,10 @@
 </head>
 
 <body>
+    <div>
+        <input id="slider" type="range" value="0" min="0" max="178" step="1" /><br/>
+        <span id="day">day</span>
+    </div>
     <script>
         var width = 700,
             height = 580;
@@ -67,52 +71,68 @@
             ]);
             //On fusionne les donnees avec le GeoJSON
             d3.json("departements-version-simplifiee.geojson").then(json => {
+
                 for (var j = 0; j < json.features.length; j++) {
                     var departement = json.features[j].properties.code;
 
                     // find permet d'eviter de faire une boucle sur toutes les donnees
                     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find#find_an_object_in_an_array_by_one_of_its_properties
-                    
-                    var jourDepChoisi = cleanData.find(d => {
-                        return (d.jour === jourChoisi && d.dep === departement); // find renvoie la ligne du tableau si la fonction qu'on lui passe en argument renvoie True.
-                    })
-                    json.features[j].properties.value = jourDepChoisi.hosp;
 
+                    //var jourDepChoisi = cleanData.find(d => {
+                    //    return (d.jour === jourChoisi && d.dep === departement); // find renvoie la ligne du tableau si la fonction qu'on lui passe en argument renvoie True.
+                    //})
+                    var jourDepChoisi = cleanData.filter(d => d.dep == departement);
+                    var table_valeur = [];
+                    for (var i = 0; i<jourDepChoisi.length; i++) {
+                        table_valeur.push(jourDepChoisi[i].hosp);
+                    }
+                    json.features[j].properties.value = table_valeur;
                 }
-                g.selectAll("path")
-                    .data(json.features)
-                    .join("path")
-                    .attr("d", path)
-                    .on('mousemove', function (e,d){
-                        var mousePosition = [e.x, e.y];
-                        // on affiche le toolip
-                        tooltip.classed('hidden', false)
-                            // on positionne le tooltip en fonction
-                            // de la position de la souris
-                            .attr('style', 'left:' + (mousePosition[0] + 15) +
-                                'px; top:' + (mousePosition[1] - 35) + 'px')
-                            .html("Département: " + d.properties.nom + "<br>" + "Nombre de cas: " + d.properties.value )
+                drawMap(0);
 
+                d3.select('#slider').on("input", e=> {
+                    var val =document.getElementById('slider').value;
+                    document.getElementById('day').innerHTML = cleanData[val*96].jour;
+                    drawMap(val);
+                })
 
-                    })
-                    .on('mouseout', function() {
-                        // on cache le toolip
-                        tooltip.classed('hidden', true);
-                    })
-                    .style("fill", function (d) {
-                        //on prend la valeur recupere plus haut
-                        var value = d.properties.value;
+                function drawMap (currentDay) {
+                    //console.log(currentDay);
+                    carte = svg.selectAll("path").data(json.features);
+                    carte.join("path")
+                        .attr("class", "enter")
+                        .attr("d", path)
+                        .on('mousemove', function (e,d){
+                            var mousePosition = [e.x, e.y];
+                            // on affiche le toolip
+                            tooltip.classed('hidden', false)
+                                // on positionne le tooltip en fonction
+                                // de la position de la souris
+                                .attr('style', 'left:' + (mousePosition[0] + 15) +'px; top:' + (mousePosition[1] - 35) + 'px')
+                                .html("Département: " + d.properties.nom + "<br>" + "Nombre de cas: " +  d.properties.value[currentDay]  )
+                        })
+                        .on('mouseout', function() {
+                            // on cache le toolip
+                            tooltip.classed('hidden', true);
+                        })
+                        .style("fill", function (d) {
+                            //on prend la valeur recupere plus haut
+                            var value = d.properties.value[currentDay];
 
-                        if (value) {
-                            return color(value);
-                        } else {
-                            // si pas de valeur alors en gris
-                            return "#ccc";
-                        }
-                    })
+                            if (value) {
+                                return color(value);
+                            } else {
+                                // si pas de valeur alors en gris
+                                return "#ccc";
+                            }
+                        })
+                }
+
 
             });
         });
+
+
 
     </script>
 </body>
