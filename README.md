@@ -20,7 +20,7 @@ Ce qui est requis pour démarrer ce projet :
 
 https://marionvertessen.github.io/TP3_data_visualisation/
 
-## Auteurs
+## Auteur
 
 ---
 - Marion Vertessen 
